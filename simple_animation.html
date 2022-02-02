@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<title>Simple Animation</title>
+
+<!-- 
+Simple animation program.
+
+-Michael Weeks, October 2019
+-->
+
+<script type="application/javascript">
+// <![CDATA[
+var INTERVAL = 50;
+var DEBUG = false; //true;
+
+var canvas;             // The canvas shown on the page.
+var ctx;                // The context, used to access the canvas.
+
+var SpriteRow = 0;      // Row of the graphic to show
+var SpriteCol = 0;      // Col of the graphic to show
+var MaxSpriteRow = 8;   // How many rows of images
+var MaxSpriteCol = 8;  // How many columns of images
+
+var SpriteX = 100;      // Position of sprite on the canvas
+var SpriteY = 100;
+var SpriteWidth = 32;   // Width, Height of each subimage
+var SpriteHeight = 32;
+
+var SpriteImage = new Image();   // Sprite sheet
+SpriteImage.src   = "Pounce.png";
+
+var CharRow = 0;
+var CharCol = 0;
+var MaxCharRow = 8;
+var MaxCharCol = 8;
+
+var CharX = 300;
+var CharY = 300;
+var CharWidth = 32;
+var CharHeight = 32;
+var CharImage = new Image(); // Character image for hw4
+CharImage.src = "gsuG.png";
+
+// Set up a timer to execute every 50 ms.
+var myInterval;
+
+
+function eraseSprite() {
+  // erase sprite
+  ctx.clearRect(SpriteX, SpriteY, SpriteWidth, SpriteHeight);
+}
+
+function eraseChar() {
+  // erase Char
+  ctx.clearRect(CharX, CharY, CharWidth, CharHeight);
+}
+
+function drawSprite() {
+  // draw sprite
+  //ctx.drawImage(SpriteImage, SpriteX, SpriteY);
+  ctx.drawImage(SpriteImage, SpriteCol * SpriteWidth, SpriteRow * SpriteHeight, 
+    SpriteWidth, SpriteHeight, SpriteX, SpriteY, SpriteWidth, SpriteHeight); 
+
+
+  // update the next image to show
+  // SpriteCol++;
+  if (SpriteCol >= MaxSpriteCol)
+    SpriteCol = 0;
+}
+
+function drawChar() {
+  // draw Char
+  ctx.drawImage(CharImage, CharCol * CharWidth, CharRow * CharHeight,
+     CharWidth, CharHeight, CharX, CharY, CharWidth, CharHeight);
+
+  if (CharCol >= MaxCharCol)
+    CharCol = 0;
+}
+
+
+function Tick() {
+  // Erase the sprite from its current location.
+  eraseSprite();
+  eraseChar();
+  // Show a new image
+  drawSprite();
+  drawChar();
+}
+
+
+function loadComplete() {
+  console.log("Load is complete."); 
+  canvas = document.getElementById("theCanvas");
+  ctx = canvas.getContext("2d");
+  myInterval = self.setInterval(function(){Tick()}, INTERVAL);
+}
+
+function collisionDetectSprite() {
+  if(SpriteX <= (CharX + CharWidth) && (SpriteX + SpriteWidth) >= CharX &&
+     SpriteY <= (CharY + CharHeight) && (SpriteY + SpriteHeight) >= CharY)
+    return true;
+}
+
+function collisionDetectChar() {
+  if(CharX <= (SpriteX + SpriteWidth) && (CharX + CharWidth) >= SpriteX &&
+     CharY <= (SpriteY + SpriteHeight) && (CharY + CharHeight) >= SpriteY)
+    return true;
+}
+
+// What to do when the user presses a key.
+function whenKeyPressed(key) {
+  switch (key) {
+    case 28:  // Right arrow was pressed
+      eraseSprite();
+      SpriteX += 10;
+      if(SpriteX >= 610)
+        SpriteX = 610;
+
+      if(collisionDetectSprite() == true) // collision test
+        SpriteX -= 10;
+
+      drawSprite(); 
+      break;
+    case 29:  // Left arrow, ASCII 29
+      eraseSprite();
+      SpriteX -= 10;
+      if(SpriteX <= 0)
+        SpriteX = 10;
+
+      if(collisionDetectSprite() == true) // collision test
+        SpriteX += 10;  
+
+      drawSprite(); 
+      break;
+    case 30:  // Up arrow was pressed 
+      // Go up a row
+      //  SpriteRow = SpriteRow - 1;
+      //  if (SpriteRow < 0)
+      //    SpriteRow = MaxSpriteRow - 1;  
+      //  SpriteCol = 0; // reset column to first image
+      eraseSprite();
+      SpriteY -= 10;
+      if(SpriteY <= 0)
+        SpriteY = 10;
+
+      if(collisionDetectSprite() == true) // collision test
+        SpriteY += 10;
+
+      drawSprite();
+      break;
+    case 31:  // Down arrow was pressed 
+      // Go down a row
+      // SpriteRow = SpriteRow + 1;
+      // if (SpriteRow >= MaxSpriteRow)
+      //   SpriteRow = 0;
+      // SpriteCol = 0; // reset column to first image
+      eraseSprite();
+      SpriteY += 10;
+      if(SpriteY >= 450)
+        SpriteY = 450;
+
+      if(collisionDetectSprite() == true) // collision test
+        SpriteY -= 10;
+
+      drawSprite();
+      break;
+    case 68: // d
+      eraseChar();
+      CharX += 10;
+      if(CharX >= 610)
+        CharX = 610;
+
+      if(collisionDetectChar() == true)
+        CharX -= 10;
+
+      drawChar();
+      break;
+    case 65: // a
+      eraseChar();
+      CharX -= 10;
+      if(CharX <= 0)
+        CharX = 10;
+
+      if(collisionDetectChar() == true)
+        CharX += 10;
+
+      drawChar();
+      break;
+    case 87: // w
+      eraseChar();
+      CharY -= 10;
+      if(CharY <= 0)
+        CharY = 10;
+
+      if(collisionDetectChar() == true)
+        CharY += 10;
+
+      drawChar();
+      break;
+    case 83: // s
+      eraseChar();
+      CharY += 10;
+      if(CharY >= 450)
+        CharY = 450;
+
+      if(collisionDetectChar() == true)
+        CharY -= 10;
+
+      drawChar();
+      break;
+  }
+}
+///]]>
+</script>
+
+</head>
+<body onload="loadComplete()" bgcolor="#0f0000" text="#ffffff">
+
+<center>
+  <canvas id="theCanvas" tabindex="1" width="640" height="480"></canvas>
+<h2>Press up/down to see different rows</h2>
+</center>
+
+<script type="application/javascript">
+  //
+  // Set up a function to handle key-presses.
+  //
+  // This should work across most browsers.
+  document['onkeydown'] = function(event) {
+    event = event || window.event;
+    var key = event.which || event.cursor;
+    // Check for a special key value, and map it to ASCII.
+    switch (key) {
+      case 37:  // Left arrow, ASCII 29 
+        key = 29;
+        break;
+      case 38:  // Up arrow, ASCII 30
+        key = 30;
+        break;
+      case 39:  // Right arrow, ASCII 28  
+        key = 28;
+        break; 
+      case 40:  // Down arrow, ASCII 31
+        key = 31;
+        break;
+    }
+    //document.getElementById("keydown").innerHTML =
+    //  " key Down event, keycode " + key;
+    whenKeyPressed(key);
+  };
+</script>
+
+
+</body></html>

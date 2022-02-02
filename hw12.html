@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+	<title>HW12 - Sangwha Lee</title>
+
+	<script type="application/javascript">
+		// <![CDATA[
+
+		var theCanvas;
+		var theContext;
+		var CANVASWIDTH = 640;
+		var CANVASHEIGHT = 480;
+
+		var mydialog = new Array();            // Array of options
+		var prompt = "Select your response";   // Instructions for user
+		var optionKeys = "ABCD";               // Possible options
+		var optionKeyIndex = 0;                // Index into optionKeys (which option the user chose)
+
+		// NEW VARIABLES
+		var response_dialog = new Array();
+		response_dialog.push(".");
+		var response_to_A = "";
+		var response_to_B = "";
+		var response_to_C = "";
+		var response_to_D = "";
+		var revisit = false;
+		var end = false;
+		var to2 = false;
+		var to3 = false;
+		var to4 = false;
+		var to5 = false;
+		var to6 = false;
+		var to7 = false;
+		var to8 = false;
+
+		// SHOW DIALOG
+		function show_dialog() {
+			var Yspace = 22;
+			var Yloc = 40;
+			var Xloc = 0;
+			var responseY = 200;
+
+			theContext.clearRect(0, 0, CANVASWIDTH, CANVASHEIGHT);
+			theContext.fillStyle = "white";
+			theContext.font = "bold 16px Arial";
+
+			var line;
+
+			// Show the prompt
+			theContext.fillText(prompt, Xloc, Yloc);
+			Yloc += Yspace;
+
+			// Now show the options.
+			// Make sure that this does not show more options than supported (4).
+			// (m<mydialog.length) && (m<optionKeys.length)
+			for (var m = 0; m < mydialog.length; m++) {
+				// Build the line of text, e.g. if the first one has text "hello"
+				// then line should be "A. hello"
+				line = optionKeys[m] + ". " + mydialog[m];
+				// Show this line on the canvas
+				theContext.fillText(line, Xloc, Yloc);
+				// Update Yloc to the next line down. 
+				// We do not update Xloc, since all lines should be left-justified.
+				Yloc += Yspace;
+			}
+
+			for (var i = 0; i < response_dialog.length; i++) {
+				theContext.fillText(response_dialog[i], Xloc, responseY);
+				responseY += Yspace;
+			}
+		}
+
+		// add String to mydialog -> create options
+		function add_to_options(str) {
+			mydialog.push(str);
+		}
+
+		// add String to response_dialog -> senario condition
+		function add_to_response(str) {
+			response_dialog.push(str);
+		}
+
+		// delete already selected options
+		function del_from_options(index) {
+			mydialog[index] = ".";
+		}
+
+		// display "Results: ..."
+		function add_to_paragraph(str) {
+			var paragraph = document.getElementById("results").innerHTML;
+			paragraph += str;
+			document.getElementById("results").innerHTML = paragraph;
+		}
+
+		// game end -> turn screen green
+		function green() {
+			document.bgColor = "#0f6000";
+			Fill = "#0f6000";
+		}
+
+		// Call the function to process key input.
+		function processResponse(str1, str2, str3, str4) {
+			var valid = false;
+
+			if (optionKeyIndex > -1) {
+				if (optionKeyIndex < mydialog.length) {
+
+					if (optionKeyIndex == 0) {
+						add_to_paragraph(str1 + "<br>");
+						add_to_response(str1);
+					} else if (optionKeyIndex == 1) {
+						add_to_paragraph(str2 + "<br>");
+						add_to_response(str2);
+					} else if (optionKeyIndex == 2) {
+						add_to_paragraph(str3 + "<br>");
+						add_to_response(str3);
+					} else if (optionKeyIndex == 3) {
+						add_to_paragraph(str4 + "<br>");
+						add_to_response(str4);
+					}
+
+					valid = true;
+				}
+			}
+
+			// If the user selects item, remove it from the list
+			if (valid && (optionKeyIndex == 0)) {
+				del_from_options(0);
+				show_dialog();
+			} else if (valid && (optionKeyIndex == 1)) {
+				del_from_options(1);
+				show_dialog();
+			} else if (valid && (optionKeyIndex == 2)) {
+				del_from_options(2);
+				show_dialog();
+			} else if (valid && (optionKeyIndex == 3)) {
+				del_from_options(3);
+				show_dialog();
+			}
+		}
+
+		// SENARIO 1~8 
+		function conversation_start_1() {
+			to2 = false;
+			to3 = false;
+			to8 = false;
+			mydialog = [];
+			prompt = "CONVERSATION START";
+			add_to_options("We need your help to solve a crime. Were you on 3rd Street last night?");
+			add_to_options("What were you doing on 3rd Street last night?");
+			add_to_options("We think you were involved in the shooting on 3rd Street last night.");
+			add_to_options("Keane got shot last night. We know you did it, so start talking.");
+			response_to_A = "Yeah, I was coming home from a bar.";
+			response_to_B = "Getting drunk, what's it to you?";
+			response_to_C = "Hey, no way! Violence is not my thing, man.";
+			response_to_D = "That's garbage, and I'm saying nothing.";
+			show_dialog();
+
+			if (response_dialog[response_dialog.length - 1] == response_to_A && response_to_A != ".") {
+				to3 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_B && response_to_B != ".") {
+				to3 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_C && response_to_C != ".") {
+				to2 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_D && response_to_D != ".") {
+				to8 = true;
+				clearInterval(interval);
+			}
+
+			if (to2) {
+				interval = setInterval(demand_an_alibi_2, 100);
+			} else if (to3) {
+				interval = setInterval(name_of_bar_3, 100);
+			} else if (to8) {
+				interval = setInterval(obstructive_witness_8, 100);
+			}
+		}
+
+		function demand_an_alibi_2() {
+			to3 = false;
+			to5 = false;
+			mydialog = [];
+			prompt = "DEMAND AN ALIBI";
+			add_to_options("Oh, yeah, you're a model citizen. You got an alibi?");
+			add_to_options("That's not what your police record says. Where were you?");
+			add_to_options(".");
+			add_to_options(".");
+			response_to_A = "I was in a bar, OK?";
+			response_to_B = "Look, I was in a bar. 9 to midnight.";
+			response_to_C = ".";
+			response_to_D = ".";
+			show_dialog();
+
+			if (response_dialog[response_dialog.length - 1] == response_to_A && response_to_A != ".") {
+				to3 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_B && response_to_B != ".") {
+				to5 = true;
+				clearInterval(interval);
+			}
+
+			if (to3) {
+				interval = setInterval(name_of_bar_3, 100);
+			} else if (to5) {
+				interval = setInterval(ask_about_evidence_5, 100);
+			}
+		}
+
+		function name_of_bar_3() {
+			to4 = false;
+			to5 = false;
+			to8 = false;
+			mydialog = [];
+			prompt = "NAME OF BAR";
+			add_to_options("That's good, we'll need the name of the bar.");
+			add_to_options("Yeah? What bar were you in?");
+			add_to_options("You better not be lying. What's the name of the bar?");
+			add_to_options("You weren't in any bar, you were in the alley shooting Keane.");
+			response_to_A = "I was in Foley's from 9 until midnight.";
+			response_to_B = "Foley's. I'm there every night.";
+			response_to_C = "I ain't lying. It was Foley's Bar.";
+			response_to_D = "No I wasn't, and you've got nothing.";
+			show_dialog();
+
+			if (response_dialog[response_dialog.length - 1] == response_to_A && response_to_A != ".") {
+				to5 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_B && response_to_B != ".") {
+				to4 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_C && response_to_C != ".") {
+				to4 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_D && response_to_D != ".") {
+				to8 = true;
+				clearInterval(interval);
+			}
+
+			if (to4) {
+				interval = setInterval(time_of_bar_visit_4, 100);
+			} else if (to5) {
+				interval = setInterval(ask_about_evidence_5, 100);
+			} else if (to8) {
+				interval = setInterval(obstructive_witness_8, 100);
+			}
+		}
+
+		function time_of_bar_visit_4() {
+			to5 = false;
+			mydialog = [];
+			prompt = "TIME OF BAR VISIT";
+
+			if (revisit) {
+				if (response_dialog.includes("Got there around 9, left around midnight.")) {
+					if (response_dialog.includes("9 to midnight. He'll remember me all right.")) { // A(B) and C
+						add_to_options(".");
+						add_to_options(".");
+						add_to_options(".");
+						add_to_options("So tell me some lies about whom you were there.");
+						response_to_A = ".";
+						response_to_B = ".";
+						response_to_C = ".";
+						response_to_D = "Forget it. I want a lawyer.";
+						show_dialog();
+					} else { // Only A(B)
+						add_to_options(".");
+						add_to_options(".");
+						add_to_options("You better hope Foley backs you up. When were you there?");
+						add_to_options("So tell me some lies about whom you were there.");
+						response_to_A = ".";
+						response_to_B = ".";
+						response_to_C = "9 to midnight. He'll remember me all right.";
+						response_to_D = "Forget it. I want a lawyer.";
+						show_dialog();
+					}
+				} else { // Only C
+					add_to_options("Can you tell us what time you were there, please?");
+					add_to_options("When did you get there, and how long did you stay?");
+					add_to_options(".");
+					add_to_options("So tell me some lies about whom you were there.");
+					response_to_A = "Got there around 9, left around midnight.";
+					response_to_B = "Got there around 9, left around midnight.";
+					response_to_C = ".";
+					response_to_D = "Forget it. I want a lawyer.";
+					show_dialog();
+				}
+			} else {
+				add_to_options("Can you tell us what time you were there, please?");
+				add_to_options("When did you get there, and how long did you stay?");
+				add_to_options("You better hope Foley backs you up. When were you there?");
+				add_to_options("So tell me some lies about whom you were there.");
+				response_to_A = "Got there around 9, left around midnight.";
+				response_to_B = "Got there around 9, left around midnight.";
+				response_to_C = "9 to midnight. He'll remember me all right.";
+				response_to_D = "Forget it. I want a lawyer.";
+				show_dialog();
+			}
+
+			if (response_dialog[response_dialog.length - 1] == response_to_A && response_to_A != ".") {
+				revisit = false;
+				to5 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_B && response_to_B != ".") {
+				revisit = false;
+				to5 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_C && response_to_C != ".") {
+				revisit = false;
+				to5 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_D && response_to_D != ".") {
+				revisit = false;
+				end = true;
+				clearInterval(interval);
+				green();
+				// end
+			}
+
+			if (to5) {
+				interval = setInterval(ask_about_evidence_5, 100);
+			}
+		}
+
+		function ask_about_evidence_5() {
+			to5 = false;
+			to6 = false;
+			mydialog = [];
+			prompt = "ASK ABOUT EVIDENCE";
+
+			if (revisit) {
+				if (response_dialog.includes("No, no shots. I'd remember shots.")) { // A
+					if (response_dialog.includes("Not that I remember.")) { // A and B
+						add_to_options(".");
+						add_to_options(".");
+						add_to_options("When you came out, did you see a blue car go by?");
+						add_to_options("That's all we want to know for now.");
+						response_to_A = ".";
+						response_to_B = ".";
+						response_to_C = "Yeah...going real fast! A sports car.";
+						response_to_D = "Good. 'cause I got places to be, you know?";
+						show_dialog();
+					} else { // Only A
+						add_to_options(".");
+						add_to_options("We're trying to trace a tall men in jogging clothes. Did you see him?");
+						add_to_options("When you came out, did you see a blue car go by?");
+						add_to_options("That's all we want to know for now.");
+						response_to_A = ".";
+						response_to_B = "Not that I remember.";
+						response_to_C = "Yeah...going real fast! A sports car.";
+						response_to_D = "Good. 'cause I got places to be, you know?";
+						show_dialog();
+					}
+				} else { // Only B
+					add_to_options("Did you hear any shots around that time?");
+					add_to_options(".");
+					add_to_options("When you came out, did you see a blue car go by?");
+					add_to_options("That's all we want to know for now.");
+					response_to_A = "No, no shots. I'd remember shots.";
+					response_to_B = ".";
+					response_to_C = "Yeah...going real fast! A sports car.";
+					response_to_D = "Good. 'cause I got places to be, you know?";
+					show_dialog();
+				}
+			} else {
+				add_to_options("Did you hear any shots around that time?");
+				add_to_options("We're trying to trace a tall men in jogging clothes. Did you see him?");
+				add_to_options("When you came out, did you see a blue car go by?");
+				add_to_options("That's all we want to know for now.");
+				response_to_A = "No, no shots. I'd remember shots.";
+				response_to_B = "Not that I remember.";
+				response_to_C = "Yeah...going real fast! A sports car.";
+				response_to_D = "Good. 'cause I got places to be, you know?";
+				show_dialog();
+			}
+
+			if (response_dialog[response_dialog.length - 1] == response_to_A && response_to_A != ".") {
+				revisit = true;
+				to5 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_B && response_to_B != ".") {
+				revisit = true;
+				to5 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_C && response_to_C != ".") {
+				revisit = false;
+				to6 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_D && response_to_D != ".") {
+				revisit = false;
+				end = true;
+				clearInterval(interval);
+				green();
+				// end
+			}
+
+			if (to5) {
+				interval = setInterval(ask_about_evidence_5, 100);
+			} else if (to6) {
+				interval = setInterval(about_the_car_6, 100);
+			}
+		}
+
+		function about_the_car_6() {
+			to7 = false;
+			mydialog = [];
+			prompt = "ABOUT THE CAR";
+
+			if (revisit) {
+				if (response_dialog.includes("What, I got a photographic memory? No.")) { // A
+					if (response_dialog.includes("Maybe a Porsche. I'm not a car guy.")) { // A and B
+						add_to_options(".");
+						add_to_options(".");
+						add_to_options("Did you see the driver?");
+						add_to_options(".");
+						response_to_A = ".";
+						response_to_B = ".";
+						response_to_C = "It was a man. That's all I can say.";
+						response_to_D = ".";
+						show_dialog();
+					} else if (response_dialog.includes("It was a man. That's all I can say.")) { // A and C
+						add_to_options(".");
+						add_to_options("Do you remember the model? Foreign, domestic?");
+						add_to_options(".");
+						add_to_options(".");
+						response_to_A = ".";
+						response_to_B = "Maybe a Porsche. I'm not a car guy.";
+						response_to_C = ".";
+						response_to_D = ".";
+						show_dialog();
+					} else { // only A
+						add_to_options(".");
+						add_to_options("Do you remember the model? Foreign, domestic?");
+						add_to_options("Did you see the driver?");
+						add_to_options(".");
+						response_to_A = ".";
+						response_to_B = "Maybe a Porsche. I'm not a car guy.";
+						response_to_C = "It was a man. That's all I can say.";
+						response_to_D = ".";
+						show_dialog();
+					}
+				} else { // B or C
+					if (response_dialog.includes("Maybe a Porsche. I'm not a car guy.")) { // B
+						if (response_dialog.includes("It was a man. That's all I can say.")) { // B and C
+							add_to_options("Did you catch a look at the license plate?");
+							add_to_options(".");
+							add_to_options(".");
+							add_to_options(".");
+							response_to_A = "What, I got a photographic memory? No.";
+							response_to_B = ".";
+							response_to_C = ".";
+							response_to_D = ".";
+							show_dialog();
+						} else { // Only B
+							add_to_options("Did you catch a look at the license plate?");
+							add_to_options(".");
+							add_to_options("Did you see the driver?");
+							add_to_options(".");
+							response_to_A = "What, I got a photographic memory? No.";
+							response_to_B = ".";
+							response_to_C = "It was a man. That's all I can say.";
+							response_to_D = ".";
+							show_dialog();
+						}
+					} else { // Only C
+						add_to_options("Did you catch a look at the license plate?");
+						add_to_options("Do you remember the model? Foreign, domestic?");
+						add_to_options(".");
+						add_to_options(".");
+						response_to_A = "What, I got a photographic memory? No.";
+						response_to_B = "Maybe a Porsche. I'm not a car guy.";
+						response_to_C = ".";
+						response_to_D = ".";
+						show_dialog();
+					}
+				}
+			} else {
+				add_to_options("Did you catch a look at the license plate?");
+				add_to_options("Do you remember the model? Foreign, domestic?");
+				add_to_options("Did you see the driver?");
+				add_to_options(".");
+				response_to_A = "What, I got a photographic memory? No.";
+				response_to_B = "Maybe a Porsche. I'm not a car guy.";
+				response_to_C = "It was a man. That's all I can say.";
+				response_to_D = ".";
+				show_dialog();
+			}
+
+			if (response_dialog[response_dialog.length - 1] == response_to_A && response_to_A != ".") {
+				to7 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_B && response_to_B != ".") {
+				to7 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_C && response_to_C != ".") {
+				to7 = true;
+				clearInterval(interval);
+			}
+
+			if (to7) {
+				interval = setInterval(follow_up_7, 100);
+			}
+		}
+
+		function follow_up_7() {
+			to4 = false;
+			to6 = false;
+			mydialog = [];
+			prompt = "FOLLOW UP";
+
+			if (response_dialog.includes("What, I got a photographic memory? No.") && response_dialog.includes("Maybe a Porsche. I'm not a car guy.") && response_dialog.includes("It was a man. That's all I can say.")) {
+				add_to_options(".");
+				add_to_options("I need to ask you again about your alibi.");
+				add_to_options("All right, that'll do for now. Don't leave town.");
+				add_to_options(".");
+				response_to_A = ".";
+				response_to_B = "It's not going to be any different.";
+				response_to_C = "Thanks for nothing";
+				response_to_D = ".";
+				show_dialog();
+			} else {
+				add_to_options("I've got another question about the car.");
+				add_to_options("I need to ask you again about your alibi.");
+				add_to_options("All right, that'll do for now. Don't leave town.");
+				add_to_options(".");
+				response_to_A = "Fine away";
+				response_to_B = "It's not going to be any different.";
+				response_to_C = "Thanks for nothing";
+				response_to_D = ".";
+				show_dialog();
+			}
+
+			if (response_dialog[response_dialog.length - 1] == response_to_A && response_to_A != ".") {
+				revisit = true;
+				to6 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_B && response_to_B != ".") {
+				revisit = true;
+				to4 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_C && response_to_C != ".") {
+				revisit = false;
+				end = true;
+				clearInterval(interval);
+				green();
+				// end
+			}
+
+			if (to6) {
+				interval = setInterval(about_the_car_6, 100);
+			} else if (to4) {
+				interval = setInterval(time_of_bar_visit_4, 100);
+			}
+		}
+
+		function obstructive_witness_8() {
+			to4 = false;
+			mydialog = [];
+			prompt = "OBSTRUCTIVE WITNESS";
+			add_to_options("You're the prime suspect, unless you convince us otherwise.");
+			add_to_options("If you know who did it, you better talk or we'll charge you.");
+			add_to_options(".");
+			add_to_options(".");
+			response_to_A = "Yeah, well I was in Foley's bar.";
+			response_to_B = "Fine, charge me. I want a lawyer.";
+			response_to_C = ".";
+			response_to_D = ".";
+			show_dialog();
+
+			if (response_dialog[response_dialog.length - 1] == response_to_A && response_to_A != ".") {
+				revisit = true;
+				to4 = true;
+				clearInterval(interval);
+			} else if (response_dialog[response_dialog.length - 1] == response_to_B && response_to_B != ".") {
+				revisit = false;
+				end = true;
+				clearInterval(interval);
+				green();
+				// end
+			}
+
+			if (to4) {
+				interval = setInterval(time_of_bar_visit_4, 100);
+			}
+		}
+
+		// ************************************************************************ //
+		//      Start of key-press functions                                        //
+		// ************************************************************************ //
+		document['onkeydown'] = function (event) {
+
+			event = event || window.event;
+			var key = event.which || event.cursor;
+
+			// Check for a special key value, and map it to ASCII.
+			switch (key) {
+				case 37:  // Left arrow, ASCII 29
+					key = 29;
+					break;
+				case 38:  // Up arrow, ASCII 30
+					key = 30;
+					break;
+				case 39:  // Right arrow, ASCII 28
+					key = 28;
+					break;
+				case 40:  // Down arrow, ASCII 31
+					key = 31;
+					break;
+			}
+			if (!end) {
+				whenKeyPressed(key);
+			}
+		};
+
+		function whenKeyPressed(key) {
+
+			switch (key) {
+				case 65:   // 'A'
+					// Option A selected
+					console.log("Option A selected");
+					optionKeyIndex = 0;
+					break;
+				case 66:   // 'B'
+					// Option B selected
+					console.log("Option B selected");
+					optionKeyIndex = 1;
+					break;
+				case 67:   // 'C'
+					// Option C selected
+					console.log("Option C selected");
+					optionKeyIndex = 2;
+					break;
+				case 68:   // 'D'
+					// Option D selected
+					console.log("Option D selected");
+					optionKeyIndex = 3;
+					break;
+				default:
+					optionKeyIndex = -1;
+					break;
+			}
+			processResponse(response_to_A, response_to_B, response_to_C, response_to_D);
+		}
+
+//]]>
+	</script>
+
+</head>
+
+<body bgcolor="#020202" text="#ffffff">
+
+	<center>
+		<script type="application/javascript">
+			document.writeln("HW12 - Sangwha Lee<br>");
+
+			// Make the main canvas.
+			document.writeln('<canvas id="theCanvas" tabindex="1" width="'
+				+ CANVASWIDTH + '" height="' + CANVASHEIGHT + '">');
+			document.writeln('<\/canvas>');
+			// Defining theContext
+			theCanvas = document.getElementById("theCanvas");
+			theContext = theCanvas.getContext("2d");
+
+
+			document.writeln('<p id="results">Results:<br></p>');
+
+			// START SENARIO 1
+			var interval = setInterval(conversation_start_1, 100);
+		</script>
+	</center>
+
+</body>
+
+</html>

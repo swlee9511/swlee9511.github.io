@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<title>Game of Life</title>
+
+<!--
+HW13 modified from hw10.html - Sangwha Lee
+-->
+
+	<script type="application/javascript">
+	var INTERVAL = 50;
+	var DEBUG = false;
+	var canvas;
+	var ctx;
+	var WIDTH = 640;
+	var HEIGHT = 480;
+	var MAXROW = 15;
+	var MAXCOL = 20;
+	var tileWidth = 32;
+	var tileHeight = 32;
+	
+	// cell neighbor array where cell_neighbor[4] is the middle row middle column cell.
+	var cell_neighbor = [false, false, false, false, false, false, false, false, false]
+	
+	var cellImage = new Image();
+	cellImage.src = "features_trees.png";
+
+	var myInterval;
+
+	var myBoard = [
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0,
+	  0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+	  0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+	  0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+	  
+	var tempBoard = myBoard;
+	
+	function eraseCanvas() {
+	  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+	}
+
+	function drawTile(tile, r, c, tileWidth, tileHeight) {
+	  ctx.drawImage(cellImage,
+		tile*tileWidth, 0, tileWidth, tileHeight,
+		c*tileWidth, r*tileHeight, tileWidth, tileHeight);
+	}
+
+	function drawTiles() {
+	  var index = 0;
+	  for (var r=0; r<MAXROW; r++) {
+		for (var c=0; c<MAXCOL; c++) {
+		  tile = myBoard[index];
+		  drawTile(tile, r, c, tileWidth, tileHeight);
+		  index++;
+		}
+	  }
+	}
+	
+	function randomizeCanvas() {
+	var random_start = Math.floor(Math.random() * 12);
+	  for(var i=random_start; i<myBoard.length; i++) {
+		myBoard[i] = Math.floor(Math.random() * 12);
+	  }
+	}
+	
+	// update neighbor based on myBoard[index] as cell_neighbor[4] at row r, coloumn c
+	function get_neighbor(r, c, index) {
+		//console.log("changed neighbor");
+		if(r==0) {
+		  cell_neighbor[0] = false;
+		  cell_neighbor[1] = false;
+		  cell_neighbor[2] = false;
+		  
+		  if(c==0) {
+			cell_neighbor[3] = false;
+			cell_neighbor[6] = false;
+			
+			cell_neighbor[4] = (myBoard[index] > 0) ? true : false;
+			cell_neighbor[5] = (myBoard[index+1] > 0) ? true : false;
+			cell_neighbor[7] = (myBoard[index+20] > 0) ? true : false;
+			cell_neighbor[8] = (myBoard[index+21] > 0) ? true : false;
+		  } if(c==MAXCOL-1) {
+			cell_neighbor[5] = false;
+			cell_neighbor[8] = false;
+			
+			cell_neighbor[3] = (myBoard[index-1] > 0) ? true : false;
+			cell_neighbor[4] = (myBoard[index] > 0) ? true : false;
+			cell_neighbor[6] = (myBoard[index+19] > 0) ? true : false;
+			cell_neighbor[7] = (myBoard[index+20] > 0) ? true : false;
+		  } else {
+			cell_neighbor[4] = (myBoard[index] > 0) ? true : false;
+			cell_neighbor[3] = (myBoard[index-1] > 0) ? true : false;
+			cell_neighbor[5] = (myBoard[index+1] > 0) ? true : false;
+			cell_neighbor[6] = (myBoard[index+19] > 0) ? true : false;
+			cell_neighbor[7] = (myBoard[index+20] > 0) ? true : false;
+			cell_neighbor[8] = (myBoard[index+21] > 0) ? true : false;
+		  }
+		} else if(r==MAXROW-1) {
+		  cell_neighbor[6] = false;
+		  cell_neighbor[7] = false;
+		  cell_neighbor[8] = false;
+		  
+		  if(c==0) {
+			cell_neighbor[0] = false;
+			cell_neighbor[3] = false;
+			
+			cell_neighbor[1] = (myBoard[index-20] > 0) ? true : false;
+			cell_neighbor[2] = (myBoard[index-19] > 0) ? true : false;
+			cell_neighbor[4] = (myBoard[index] > 0) ? true : false;
+			cell_neighbor[5] = (myBoard[index+1] > 0) ? true : false;
+		  } if(c==MAXCOL-1) {
+			cell_neighbor[2] = false;
+			cell_neighbor[5] = false;
+			
+			cell_neighbor[0] = (myBoard[index-21] > 0) ? true : false;
+			cell_neighbor[1] = (myBoard[index-20] > 0) ? true : false;
+			cell_neighbor[3] = (myBoard[index-1] > 0) ? true : false;
+			cell_neighbor[4] = (myBoard[index] > 0) ? true : false;
+		  } else {
+			cell_neighbor[0] = (myBoard[index-21] > 0) ? true : false;
+			cell_neighbor[1] = (myBoard[index-20] > 0) ? true : false;
+			cell_neighbor[2] = (myBoard[index-19] > 0) ? true : false;
+			cell_neighbor[3] = (myBoard[index-1] > 0) ? true : false;
+			cell_neighbor[4] = (myBoard[index] > 0) ? true : false;
+			cell_neighbor[5] = (myBoard[index+1] > 0) ? true : false;
+		  }
+		} else {
+		  if(c==0) {
+		    cell_neighbor[0] = false;
+			cell_neighbor[3] = false;
+			cell_neighbor[6] = false;
+			
+			cell_neighbor[1] = (myBoard[index-20] > 0) ? true : false;
+			cell_neighbor[2] = (myBoard[index-19] > 0) ? true : false;
+			cell_neighbor[4] = (myBoard[index] > 0) ? true : false;
+			cell_neighbor[5] = (myBoard[index+1] > 0) ? true : false;
+			cell_neighbor[7] = (myBoard[index+20] > 0) ? true : false;
+			cell_neighbor[8] = (myBoard[index+21] > 0) ? true : false;
+		  } if(c==MAXCOL-1) {
+		    cell_neighbor[2] = false;
+			cell_neighbor[5] = false;
+			cell_neighbor[8] = false;
+			
+			cell_neighbor[0] = (myBoard[index-21] > 0) ? true : false;
+			cell_neighbor[1] = (myBoard[index-20] > 0) ? true : false;
+			cell_neighbor[3] = (myBoard[index-1] > 0) ? true : false;
+			cell_neighbor[4] = (myBoard[index] > 0) ? true : false;
+			cell_neighbor[6] = (myBoard[index+19] > 0) ? true : false;
+			cell_neighbor[7] = (myBoard[index+20] > 0) ? true : false;
+		  } else {
+		    cell_neighbor[0] = (myBoard[index-21] > 0) ? true : false;
+			cell_neighbor[1] = (myBoard[index-20] > 0) ? true : false;
+			cell_neighbor[2] = (myBoard[index-19] > 0) ? true : false;
+			cell_neighbor[3] = (myBoard[index-1] > 0) ? true : false;
+			cell_neighbor[4] = (myBoard[index] > 0) ? true : false;
+			cell_neighbor[5] = (myBoard[index+1] > 0) ? true : false;
+			cell_neighbor[6] = (myBoard[index+19] > 0) ? true : false;
+			cell_neighbor[7] = (myBoard[index+20] > 0) ? true : false;
+			cell_neighbor[8] = (myBoard[index+21] > 0) ? true : false;
+		  }
+		}
+	}
+	
+	function game_of_life() { 
+	  var index = 0;
+	  tempBoard = myBoard;
+	  
+	  for (var r=0; r<MAXROW; r++) {
+		for (var c=0; c<MAXCOL; c++) {
+		  var evolve = 0;
+		  // at each index do this
+		  get_neighbor(r, c, index);
+		  
+		  // go through cell_neighbor to figure out 'evolve' value
+		  for(var i=0; i<9; i++) {
+		    // ignore index value
+			if(i!=4) {
+			  if(cell_neighbor[i])
+				evolve++;
+			}
+		  }
+		  
+		  //console.log(evolve);
+		  // based on evolve value, and current board index value, determine future value of the cell
+		  if(evolve==2 || evolve==6 || evolve==7 || evolve==8) {
+			if(myBoard[index]>11) {
+			  // cell die of old age
+			  
+			  // by commenting out below line, no change for the cell
+			  tempBoard[index] = 0;
+			} else {
+			  tempBoard[index]++;
+			}
+		  } else if(evolve==3 && !cell_neighbor[4]) {
+		    // survive, bring life
+		    if(myBoard[index]>11) {
+			  // cell die of old age
+			  tempBoard[index] = 0;
+			} else {
+			  tempBoard[index]++;
+			}
+		  } else {
+		    // no change
+			
+			// by commenting out below line, no change for the cell
+			//tempBoard[index] = 0;
+		  }
+		  
+		  // before one cycle
+		  index++;
+		}
+	  }
+	  
+	  // after going through board, change temp to myBoard
+	  myBoard = tempBoard;
+	  console.log("board changed");
+	}
+	
+	function Tick() {
+	  // clear canvas
+	  eraseCanvas();
+	  
+	  // draw new canvas based on updated myBoard
+	  drawTiles();
+	  
+	  // update myBoard
+	  game_of_life();
+	}
+
+	function loadComplete() {
+	  canvas = document.getElementById("theCanvas");
+	  ctx = canvas.getContext("2d");
+	  randomizeCanvas();
+	  myInterval = self.setInterval(function(){Tick()}, INTERVAL);
+	}
+
+	</script>
+
+</head>
+<body onload="loadComplete()" bgcolor="#0f0000" text="#ffffff">
+
+	<center>
+	  <canvas id="theCanvas" tabindex="1" width="640" height="480"></canvas>
+	  <h2 id = "goal"> </h2>
+	  <h2> GAME OF LIFE </h2>
+	</center>
+
+	<script type="application/javascript">
+	</script>
+</body>
+</html>

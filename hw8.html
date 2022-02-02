@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+  <title>Simple Animation</title>
+
+  <!--
+  HW8 modified from hw6.html - Sangwha Lee
+-->
+
+  <script type="application/javascript">
+    // <![CDATA[
+    var INTERVAL = 50;
+    var DEBUG = false; //true;
+
+    var canvas;             // The canvas shown on the page.
+    var ctx;                // The context, used to access the canvas.
+
+    var SpriteImage = new Image();   // Sprite sheet
+    SpriteImage.src = "features.png";
+
+    var myInterval;
+    var tileWidth = 32;
+    var tileHeight = 32;
+    var WIDTH = 640;
+    var HEIGHT = 480;
+    var MAXROW = 15;
+    var MAXCOL = 20;
+    var SpriteWidth = 20;
+    var SpriteHeight = 20;
+    var player1X = 0;
+    var player1Y = 38;
+
+
+    var footballImage = new Image();
+    footballImage.src = "features.png";
+
+    var board = [
+      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+      1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1,
+      1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+      1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
+      1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1,
+      1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1,
+      1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+      1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1,
+      1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1,
+      1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1,
+      1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1,
+      1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0];
+
+    function check_collision(player1X, player1Y) {
+      var row = Math.floor((player1Y)/32);
+      var col = Math.floor((player1X)/32);
+      return board[(row*20) + col];
+    }
+
+    function goal(player1X, player1Y) {
+      if(player1X >= 620) {
+        blue();
+        document.getElementById("goal").innerHTML = "You have reached the goal, maze CLEARED!!";
+      }
+    }
+
+    function blue() {
+      document.bgColor = "#000f60";
+    }
+    function red() {
+      document.bgColor = "#f60000";
+    }
+    function grey() {
+      document.bgColor = "#777777";
+    }
+    // onload
+    function drawTile(tile, r, c, tileWidth, tileHeight) {
+      ctx.drawImage(footballImage,
+        // what part of the Image
+        tile * tileWidth, 0, tileWidth, tileHeight,
+        // where it goes on the canvas
+        c * tileWidth, r * tileHeight, tileWidth, tileHeight);
+    }
+    function drawTiles() {
+      var index = 0;
+      for (var r = 0; r < MAXROW; r++) {
+        for (var c = 0; c < MAXCOL; c++) {
+          tile = board[index];
+          drawTile(tile, r, c, tileWidth, tileHeight);
+          index++;
+        }
+      }
+    }
+
+    // Modified my simple_animation.html functions
+    function erasePlayer1() {
+      ctx.clearRect(player1X, player1Y, SpriteWidth, SpriteHeight);
+    }
+    function drawPlayer1() {
+      ctx.drawImage(SpriteImage, 166, 6,
+        SpriteWidth, SpriteHeight, player1X, player1Y, SpriteWidth, SpriteHeight);
+    }
+
+    function Tick() {
+      // Erase the sprite from its current location.
+      erasePlayer1();
+      // Show a new image
+      drawPlayer1();
+    }
+
+    function loadComplete() {
+      console.log("Load is complete.");
+      canvas = document.getElementById("theCanvas");
+      ctx = canvas.getContext("2d");
+      myInterval = self.setInterval(function () { Tick() }, INTERVAL);
+      drawTiles();
+    }
+
+    // What to do when the user presses a key.
+    function whenKeyPressed(key) {
+      switch (key) {
+        // PLAYER
+        case 28:  // Right arrow was pressed
+          erasePlayer1();
+          player1X += 10;
+          if(player1X > 620)
+            player1X = 620;
+          if(check_collision(player1X+20, player1Y))
+            player1X -= 10;
+          drawPlayer1();
+          drawTiles();
+          goal(player1X, player1Y);
+          break;
+        case 29:  // Left arrow was pressed
+          erasePlayer1();
+          player1X -= 10;
+          if(player1X <= 0)
+            player1X = 10;
+          if(check_collision(player1X, player1Y))
+            player1X += 10;
+          drawPlayer1();
+          drawTiles();
+          break;
+        case 30:  // Up arrow was pressed 
+          erasePlayer1();
+          player1Y -= 10;
+          if(check_collision(player1X, player1Y))
+            player1Y += 10;
+          drawPlayer1();
+          drawTiles();
+          break;
+        case 31:  // Down arrow was pressed 
+          erasePlayer1();
+          player1Y += 10;
+          if(player1Y >= 460)
+            player1Y = 460;
+          if(check_collision(player1X, player1Y+20))
+            player1Y -= 10;
+          drawPlayer1();
+          drawTiles();
+          break;
+      }
+    }
+  </script>
+
+</head>
+
+<body onload="loadComplete()" bgcolor="#0f0f0f" text="#ffffff">
+
+  <center>
+    <script type="application/javascript">
+      document.write("<canvas id=\"theCanvas\" tabindex=\"1\" width=\"" + WIDTH + "\" height=\"" + HEIGHT + "\"></canvas>");
+    </script>
+    <h2>up / down / left / right to move</h2>
+    <p id="goal"> </p>
+  </center>
+
+  <script type="application/javascript">
+    //
+    // Set up a function to handle key-presses.
+    //
+    // This should work across most browsers.
+    document['onkeydown'] = function (event) {
+      event = event || window.event;
+      var key = event.which || event.cursor;
+      // Check for a special key value, and map it to ASCII.
+      switch (key) {
+        case 37:  // Left arrow, ASCII 29 
+          key = 29;
+          break;
+        case 38:  // Up arrow, ASCII 30
+          key = 30;
+          break;
+        case 39:  // Right arrow, ASCII 28  
+          key = 28;
+          break;
+        case 40:  // Down arrow, ASCII 31
+          key = 31;
+          break;
+      }
+      //document.getElementById("keydown").innerHTML =
+      //  " key Down event, keycode " + key;
+      whenKeyPressed(key);
+    };
+  </script>
+
+
+</body>
+
+</html>

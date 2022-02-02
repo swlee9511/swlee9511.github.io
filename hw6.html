@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<title>Simple Animation</title>
+
+<!--
+  HW6 - Sangwha Lee
+-->
+
+<script type="application/javascript">
+// <![CDATA[
+var INTERVAL = 50;
+var DEBUG = false; //true;
+
+var canvas;             // The canvas shown on the page.
+var ctx;                // The context, used to access the canvas.
+
+var SpriteRow = 0;      // Row of the graphic to show
+var SpriteCol = 0;      // Col of the graphic to show
+var MaxSpriteRow = 8;   // How many rows of images
+var MaxSpriteCol = 8;  // How many columns of images
+
+var CharRow = 0;
+var CharCol = 0;
+var MaxCharRow = 8;
+var MaxCharCol = 8;
+
+var SpriteImage = new Image();   // Sprite sheet
+SpriteImage.src   = "Pounce.png";
+
+var CharImage = new Image(); // Character image for hw4
+CharImage.src = "gasouthern.png";
+
+// Set up a timer to execute every 50 ms.
+var myInterval;
+
+// new variables and helper functions for the football-like game
+// some of the variables are slightly modified 
+// original source from: gamedev.cs.gsu.edu/~mweeks/hw6demo.html
+var tileWidth = 32;
+var tileHeight = 32;
+var player1Score = 0;
+var player2Score = 0;
+
+var WIDTH = 640;
+var HEIGHT = 480;
+var MAXROW = 15;
+var MAXCOL = 20;
+var moved = false;
+var SpriteWidth = 29;
+var SpriteHeight = 24;
+var squareWidth = 32;
+var squareHeight = 32;
+var player1X = WIDTH - 100;
+var player1Y = Math.floor(HEIGHT/2);
+var player2X = 100;
+var player2Y = player1Y;
+var moveAmount = 8;
+var FONTSIZE = 32;
+var LEFT_GOAL = (FONTSIZE+4);
+var RIGHT_GOAL = WIDTH - (FONTSIZE+4);
+var FOOTBALL = 3;
+
+var footballImage = new Image();
+footballImage.src = "football.png";
+
+var board = [
+1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+
+function blue() {
+  document.bgColor = "#000f60";
+}
+function red() {
+  document.bgColor = "#f60000";
+}
+function grey() {
+  document.bgColor = "#777777";
+}
+// onload
+function drawTile(tile, r, c, tileWidth, tileHeight) {
+  ctx.drawImage(footballImage,
+	// what part of the Image
+	 tile*tileWidth, 0, tileWidth, tileHeight,
+	// where it goes on the canvas
+	 c*tileWidth, r*tileHeight, tileWidth, tileHeight); 
+}
+function drawTiles() {
+  var index = 0;
+
+  for(var r=0; r<MAXROW; r++) {
+    for(var c=0; c<MAXCOL; c++) {
+      tile = board[index];
+      drawTile(tile, r, c, tileWidth, tileHeight);
+      index++;
+    }
+  }
+}
+// function that will repeat
+function drawSprite(player, tempX, tempY) {
+  if(player == 1) {
+    ctx.drawImage(SpriteImage, tempX, tempY);
+  } else {
+    ctx.drawImage(CharImage, tempX, tempY);
+  }
+}
+function updateScore() {
+  document.getElementById("player1stat").innerHTML = "Player 1(BLUE): " + player1Score;
+  document.getElementById("player2stat").innerHTML = "Player 2(RED): " + player2Score;
+}
+
+// onload & when board has changes
+function drawEndzones() {
+  ctx.fillStyle = "white";
+  ctx.font = "bold" + FONTSIZE + "px Arial";
+
+  var r = -90*Math.PI/180;
+  ctx.save();
+  ctx.rotate(r);
+  ctx.translate(-282, FONTSIZE);
+  ctx.fillText("Goal", 0, 0);
+  ctx.restore();
+
+  r = 90*Math.PI/180;
+  ctx.save();
+  ctx.translate(WIDTH - FONTSIZE, 220);
+  ctx.rotate(r);
+  ctx.fillText("Goal", 0, 0);
+  ctx.restore();
+
+  ctx.strokeStyle = "#fff";
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, HEIGHT-1);
+  ctx.stroke();
+  ctx.moveTo(LEFT_GOAL, 0);
+  ctx.lineTo(LEFT_GOAL, HEIGHT-1);
+  ctx.stroke();
+
+  ctx.moveTo(RIGHT_GOAL, 0);
+  ctx.lineTo(RIGHT_GOAL, HEIGHT-1);
+  ctx.stroke();
+
+  ctx.moveTo(WIDTH, 0);
+  ctx.lineTo(WIDTH, HEIGHT-1);
+  ctx.stroke();
+}
+// initially 5 times generated
+function addAfootball() {
+  var tempRow, tempCol;
+  tempRow = 1 + Math.round(Math.random() * (MAXROW-3));
+  tempCol = 1 + Math.round(Math.random() * (MAXCOL-3));
+  board[tempRow * MAXCOL + tempCol] = 3;
+}
+// helper function for scoring and cleaning 
+function deleteFootball(tempRow, tempCol) {
+  board[tempRow * MAXCOL + tempCol] = 0;
+}
+function eraseTile(r, c, tileWidth, tileHeight) {
+  ctx.clearRect(c*tileWidth, r*tileHeight, tileWidth, tileHeight);
+}
+
+// if player gets football then +3 scores
+function check_football_collision(player, newX, newY) {
+  var tempRow = Math.floor(newY / tileWidth);
+  var tempCol = Math.floor(newX / tileHeight);
+
+  if(board[tempRow * MAXCOL + tempCol] == FOOTBALL) {
+    if(player == 1)
+      player1Score += 3;
+    else
+      player2Score += 3;
+
+    updateScore();
+    board[tempRow * MAXCOL + tempCol] = 0;
+    eraseTile(tempRow, tempCol, tileWidth, tileHeight);
+  }
+}
+// checking win condition
+function whowon() {
+  updateScore();
+  if(player1Score > player2Score)
+    blue();
+  else if(player1Score < player2Score)
+    red();
+  else
+    grey();
+}
+// 
+// END of references from: gamedev.cs.gsu.edu/~mweeks/hw6demo.html
+// 
+
+// Modified my simple_animation.html functions
+function erasePlayer1() {
+  ctx.clearRect(player1X, player1Y, SpriteWidth, SpriteHeight);
+}
+function erasePlayer2() {
+  ctx.clearRect(player2X, player2Y, SpriteWidth, SpriteHeight);
+}
+function drawPlayer1() {
+  ctx.drawImage(SpriteImage, SpriteCol * SpriteWidth, SpriteRow * SpriteHeight, 
+    SpriteWidth, SpriteHeight, player1X, player1Y, SpriteWidth, SpriteHeight); 
+
+  if (SpriteCol >= MaxSpriteCol)
+    SpriteCol = 0;
+}
+function drawPlayer2() {
+  ctx.drawImage(CharImage, CharCol * SpriteWidth, CharRow * SpriteHeight,
+     SpriteWidth, SpriteHeight, player2X, player2Y, SpriteWidth, SpriteHeight);
+
+  if (CharCol >= MaxCharCol)
+    CharCol = 0;
+}
+
+function Tick() {
+  // Erase the sprite from its current location.
+  erasePlayer1();
+  erasePlayer2();
+  // Show a new image
+  drawPlayer1();
+  drawPlayer2();
+}
+
+function loadComplete() {
+  console.log("Load is complete."); 
+  canvas = document.getElementById("theCanvas");
+  ctx = canvas.getContext("2d");
+  myInterval = self.setInterval(function(){Tick()}, INTERVAL);
+
+  addAfootball();
+  addAfootball();
+  addAfootball();
+  addAfootball();
+  addAfootball();
+
+  drawTiles();
+  drawEndzones();
+}
+
+function collisionDetectPlayer1() {
+  if(player1X <= (player2X + SpriteWidth) && (player1X + SpriteWidth) >= player2X &&
+     player1Y <= (player2Y + SpriteHeight) && (player1Y + SpriteHeight) >= player2Y)
+    return true;
+}
+
+function collisionDetectPlayer2() {
+  if(player2X <= (player1X + SpriteWidth) && (player2X + SpriteWidth) >= player1X &&
+     player2Y <= (player1Y + SpriteHeight) && (player2Y + SpriteHeight) >= player1Y)
+    return true;
+}
+
+// What to do when the user presses a key.
+function whenKeyPressed(key) {
+  switch (key) {
+// PLAYER1
+    case 28:  // Right arrow was pressed
+      erasePlayer1();
+      player1X += 10;
+      if(player1X >= 610)
+        player1X = 610;
+      if(collisionDetectPlayer1() == true) // collision test with player
+        player1X -= 10;
+      check_football_collision(1, player1X, player1Y);
+      drawPlayer1();
+      drawTiles();
+      drawEndzones(); 
+      break;
+    case 29:  // Left arrow, ASCII 29
+      erasePlayer1();
+      player1X -= 10;
+      if(player1X <= 0)
+        player1X = 10;
+      if(collisionDetectPlayer1() == true)
+        player1X += 10;  
+      check_football_collision(1, player1X, player1Y);
+      drawPlayer1(); 
+      drawTiles();
+      drawEndzones();
+      if(player1X <= SpriteWidth) {
+        player1Score += 6;
+        whowon();
+      }
+      break;
+    case 30:  // Up arrow was pressed 
+      erasePlayer1();
+      player1Y -= 10;
+      if(player1Y <= 0+SpriteHeight)
+        player1Y = 10+SpriteHeight;
+      if(collisionDetectPlayer1() == true) 
+        player1Y += 10;
+      check_football_collision(1, player1X, player1Y);
+      drawPlayer1();
+      drawTiles();
+      drawEndzones();
+      break;
+    case 31:  // Down arrow was pressed 
+      erasePlayer1();
+      player1Y += 10;
+      if(player1Y >= 450-SpriteHeight)
+        player1Y = 450-SpriteHeight;
+      if(collisionDetectPlayer1() == true)
+        player1Y -= 10;
+      check_football_collision(1, player1X, player1Y);
+      drawPlayer1();
+      drawTiles();
+      drawEndzones();
+      break;
+
+// PLAYER2
+    case 68: // d
+      erasePlayer2();
+      player2X += 10;
+      if(player2X >= 610)
+        player2X = 610;
+      if(collisionDetectPlayer2() == true)
+        player2X -= 10;
+      check_football_collision(2, player2X, player2Y);
+      drawPlayer2();
+      drawTiles();
+      drawEndzones();
+      if(player2X >= 610 - SpriteWidth) {
+        player2Score += 6;
+        whowon();
+      }
+      break;
+    case 65: // a
+      erasePlayer2();
+      player2X -= 10;
+      if(player2X <= 0)
+        player2X = 10;
+      if(collisionDetectPlayer2() == true)
+        player2X += 10;
+      check_football_collision(2, player2X, player2Y);
+      drawPlayer2();
+      drawTiles();
+      drawEndzones();
+      break;
+    case 87: // w
+      erasePlayer2();
+      player2Y -= 10;
+      if(player2Y <= 0+SpriteHeight)
+        player2Y = 10+SpriteHeight;
+      if(collisionDetectPlayer2() == true)
+        player2Y += 10;
+      check_football_collision(2, player2X, player2Y);
+      drawPlayer2();
+      drawTiles();
+      drawEndzones();
+      break;
+    case 83: // s
+      erasePlayer2();
+      player2Y += 10;
+      if(player2Y >= 450-SpriteHeight)
+        player2Y = 450-SpriteHeight;
+      if(collisionDetectPlayer2() == true)
+        player2Y -= 10;
+      check_football_collision(2, player2X, player2Y);
+      drawPlayer2();
+      drawTiles();
+      drawEndzones();
+      break;
+  }
+}
+///]]>
+</script>
+
+</head>
+<body onload="loadComplete()" bgcolor="#0f0f0f" text="#ffffff">
+
+<center> 
+<script type="application/javascript">
+  document.write("<canvas id=\"theCanvas\" tabindex=\"1\" width=\"" + WIDTH + "\" height=\"" + HEIGHT + "\"></canvas>");
+</script>
+<p id="player1stat">Player 1(BLUE): 0</p>
+<p id="player2stat">Player 2(RED): 0</p>
+<h2>Player2: W / S / A / D  Player2: up / down / left / right  to move</h2>
+<h2>+3 points for picking up a football</h2>
+<h2>+6 points for running across goal line (game ends == background color changes (tie=GREY))</h2>
+</center>
+
+<script type="application/javascript">
+  //
+  // Set up a function to handle key-presses.
+  //
+  // This should work across most browsers.
+  document['onkeydown'] = function(event) {
+    event = event || window.event;
+    var key = event.which || event.cursor;
+    // Check for a special key value, and map it to ASCII.
+    switch (key) {
+      case 37:  // Left arrow, ASCII 29 
+        key = 29;
+        break;
+      case 38:  // Up arrow, ASCII 30
+        key = 30;
+        break;
+      case 39:  // Right arrow, ASCII 28  
+        key = 28;
+        break; 
+      case 40:  // Down arrow, ASCII 31
+        key = 31;
+        break;
+    }
+    //document.getElementById("keydown").innerHTML =
+    //  " key Down event, keycode " + key;
+    whenKeyPressed(key);
+  };
+</script>
+
+
+</body></html>

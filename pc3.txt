@@ -1,0 +1,13 @@
+Script started on Sat 11 Sep 2021 08:07:49 PM EDT
+]0;slee293@gamedev:~/public_html[?1034h[slee293@gamedev public_html]$ ls
+[0m[38;5;34mindex.html[0m  pc3.txt  [38;5;13mPounce.png[0m  simple_animation.html
+]0;slee293@gamedev:~/public_html[slee293@gamedev public_html]$ ls -l
+total 12
+-rwxr-xr-x. 1 slee293 slee293  117 Sep 11 19:25 [0m[38;5;34mindex.html[0m
+-rw-rw-r--. 1 slee293 slee293    0 Sep 11 20:07 pc3.txt
+-rw-r--r--. 1 slee293 slee293 1712 Sep 11 19:10 [38;5;13mPounce.png[0m
+-rw-r--r--. 1 slee293 slee293 3846 Sep 11 20:06 simple_animation.html
+]0;slee293@gamedev:~/public_html[slee293@gamedev public_html]$ exit
+exit
+
+Script done on Sat 11 Sep 2021 08:12:07 PM EDT
